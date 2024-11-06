@@ -1,5 +1,7 @@
 module DynamicProgramming
 
+using Printf
+
 function solveVFI(
     u::Function,
     β::Real,
@@ -12,54 +14,45 @@ function solveVFI(
     @assert β >= 0 && β <= 1 "The discount factor must be in the interval [0,1]."
 
     # Initialize
-    i    = 1
-    Θᵢ   = keys(V₀)
-    Vᵢ   = V₀ 
-    Vᵢ₋₁ = Dict([(θ, -Inf) for θ ∈ Θᵢ])
+    i   = 1
+    Vᵢ  = V₀
+    θᵢ  = Dict([(θ, θ) for θ ∈ eachindex(Vᵢ)])
+    ΔVᵢ = tolerance
 
     # Iterate
-    while (maximum(abs.(get.(Ref(Vᵢ), Θᵢ, missing) - get.(Ref(Vᵢ₋₁), Θᵢ, missing))) >= tolerance && i <= maxiter)
+    while (ΔVᵢ >= tolerance && i <= maxiter)
         # Save the state
         Vᵢ₋₁ = Vᵢ
         
         #Hallo
         # Do the grid search
-        for θ ∈ Θᵢ
+        for θ ∈ keys(Vᵢ)
             # Initialize search value
             Vᵢ[θ] = -Inf
-
             # Loop over potential choices
-            for ϑ ∈ Θᵢ
+            for ϑ ∈ keys(Vᵢ)
                 # Evaluate choice value
                 Vₖₗ = u(θ, ϑ) + β*Vᵢ₋₁[ϑ]
-                Vᵢ[θ] = (Vₖₗ > Vᵢ[θ]) ? Vₖₗ : Vᵢ[θ]
+                if (Vₖₗ > Vᵢ[θ])
+                    Vᵢ[θ] = Vₖₗ
+                    θᵢ[θ] = ϑ
+                end
+            end
+
+            # Update slack
+            if (ΔVᵢ < Vᵢ[θ] - Vᵢ₋₁[θ])
+                ΔVᵢ = Vᵢ[θ] - Vᵢ₋₁[θ]
             end
         end
-    end
 
-    θ₊ = Dict([(θ, θ) for θ ∈ Θᵢ])
-    V₊ = Vᵢ
-    # Extract policy function
-    for θ ∈ Θᵢ
-        # Initialize search value
-        V₊[θ] = -Inf
-
-        # Loop over potential choices
-        for ϑ ∈ Θᵢ
-            # Evaluate choice value
-            Vₖₗ = u(θ, ϑ) + β*Vᵢ[ϑ]
-            θ₊[θ] = (Vₖₗ > V₊[θ]) ? ϑ : θ₊[θ]
+        # Update
+        i += 1
+        if (i % (maxiter/10) == 0)
+            println("Iteration $i/$maxiter: slack is $(@sprintf("%.2e", ΔVᵢ))")
         end
     end
 
-    return Vᵢ, θ₊
+    return Vᵢ, θᵢ
 end
-
-u(k, k̃, a) = log(k^a - k̃)
-uₐ(k, k̃) = u(k, k̃, 0.1)
-β = 0.9
-V₀ = Dict(0.1 => 0.1, 0.2 => 0.2, 0.3 => 0.3)
-
-solveVFI(uₐ, β, V₀)
 
 end
