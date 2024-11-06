@@ -23,7 +23,8 @@ function solveVFI(
     while (ΔVᵢ >= tolerance && i <= maxiter)
         # Save the state
         Vᵢ₋₁ = Vᵢ
-
+        
+        #Hallo
         # Do the grid search
         for θ ∈ keys(Vᵢ)
             # Initialize search value
