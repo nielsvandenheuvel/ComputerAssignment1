@@ -149,7 +149,7 @@ function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::Real, v::FunctionOnG
 
     # Trace out path
     for t ∈ 1:T
-        V[t] = v[π[t]]
+        V[t] = v[Π[t]]
     end
 
     return Π, V
@@ -175,7 +175,7 @@ end
 ## Tracer for Policy Function
 Wrapper for tracing multiple initial states.
 """
-function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::AbstractVector, v::FunctionOnGrid) :: Union{Matrix, Matrix}
+function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::AbstractVector, v::FunctionOnGrid) :: Tuple{Matrix, Matrix}
     # Initialize path matrix
     Π = zeros(abs(T), length(θ₀))
     V = zeros(abs(T), length(θ₀))

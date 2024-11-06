@@ -12,7 +12,6 @@ import .DynamicProgramming
 α = 1.5
 β = 0.9
 δ = 0.9
-T = 100
 
 # Exogenous
 z = 1
@@ -35,7 +34,12 @@ V̂, k̂ = DynamicProgramming.solveVFI(U, β, V₀; maxiter=100)
 # Plot value function
 k₀ = k̲:0.1:k̄
 T  = 15
-plot(1:T, DynamicProgramming.policyTrace(T, k̂, k₀))
+kₜ, Vₜ = DynamicProgramming.policyTrace(T, k̂, k₀, V̂)
+p = plot()
+for k ∈ k₀
+    plot!(p, 1:T, kₜ, palette=:Dark2_5, legend=false)
+end
+display(p)
 
 
 # Problem 5
