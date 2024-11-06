@@ -6,14 +6,36 @@ using LinearAlgebra
 # Type alias for working input
 const FunctionOnGrid = AbstractDict{<:Union{<:Real, <:AbstractVector{<:Real}}, <:Real}
 
+"""
+# Neoclassical Growth Model Solver Using Value Function Iteration Algorithm
+Method to find value- and policy function.
+
+## Positional Arguments:
+- __u__ : : Function | Transition utility function; that is, utility from going from one state to another, 
+with the arguments positional and in this order.
+- __β__ : : Real | Discount factor.
+- __V₀__ : : FunctionOnGrid | The initial guess for the value function.
+
+## Named Arguments
+- __monotone__ : : Bool | Exploit monotonicity of the value function to refine the grid.
+- __concave__ : : Bool | Exploit concavity of the value function to refine the grid.
+- __tolerance__ : : Real | Stopping tolerance.
+- __maxiter__ : : Real | Maximum number of iterations.
+
+## Returns:
+- FunctionOnGrid | Value function.
+- FunctionOnGrid | Policy function.
+
+_P.S. FunctionOnGrid is a type alias for AbstractDict{<:Union{<:Real, <:AbstractVector{<:Real}}, <:Real}._
+"""
 function solveVFI(
     u::Function,
     β::Real,
     V₀::FunctionOnGrid;
     monotone::Bool = false,
     concave::Bool = false,
-    tolerance::Real = 10E-5,
-    maxiter::Real = 10E5
+    tolerance::Real = 1e-5,
+    maxiter::Real = 1e5
 )
     @assert β >= 0 && β <= 1 "The discount factor must be in the interval [0,1]."
 
@@ -64,7 +86,22 @@ function solveVFI(
     return Vᵢ, πᵢ
 end
 
-function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::Real; plot::Bool = false)
+"""
+# Tracer for Policy Function
+Method to trace out a policy function for a number of steps. _TD: inverse tracing does not work yet._.
+
+## Positional Arguments:
+- __T__ : : Integer | Number of steps to trace.
+- __π__ : : FunctionOnGrid | Policy function.
+- __θ₀__ : : Real | The initial state.
+
+## Returns:
+## Returns:
+- Vector | Policy trace.
+
+_P.S. FunctionOnGrid is a type alias for AbstractDict{<:Union{<:Real, <:AbstractVector{<:Real}}, <:Real}._
+"""
+function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::Real) :: Vector
     if (T == 0)
         return θ₀
     else
@@ -91,15 +128,38 @@ function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::Real; plot::Bool = f
         end
     end
 
-    # Plot results
-    if (plot)
-
-    end
-
     return Π
 end
 
-function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::AbstractVector{<:Real})
+"""
+# Tracer for Policy Function
+Wrapper to trace out value corresponding to policy trace.
+
+## Additonal Positional Arguments:
+- __v__ : : FunctionOnGrid | Value function.
+
+_P.S. FunctionOnGrid is a type alias for AbstractDict{<:Union{<:Real, <:AbstractVector{<:Real}}, <:Real}._
+"""
+function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::Real, v::FunctionOnGrid) :: Tuple{Vector, Vector}
+    # Obtain policy trace
+    Π = policyTrace(T, π, θ₀)
+
+    # Initialize path vector
+    V = zeros(abs(T))
+
+    # Trace out path
+    for t ∈ 1:T
+        V[t] = v[π[t]]
+    end
+
+    return Π, V
+end
+
+"""
+## Tracer for Policy Function
+Wrapper for tracing multiple initial states.
+"""
+function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::AbstractVector) :: Matrix
     # Initialize path matrix
     Π = zeros(abs(T), length(θ₀))
 
@@ -111,6 +171,21 @@ function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::AbstractVector{<:Rea
     return Π
 end
 
-function policyTrace
+"""
+## Tracer for Policy Function
+Wrapper for tracing multiple initial states.
+"""
+function policyTrace(T::Integer, π::FunctionOnGrid, θ₀::AbstractVector, v::FunctionOnGrid) :: Union{Matrix, Matrix}
+    # Initialize path matrix
+    Π = zeros(abs(T), length(θ₀))
+    V = zeros(abs(T), length(θ₀))
+
+    # Fill
+    for (k, θ) ∈ enumerate(θ₀)
+        Π[1:T, k], V[1:T, k] = policyTrace(T, π, θ, v)
+    end
+
+    return Π, V
+end
 
 end

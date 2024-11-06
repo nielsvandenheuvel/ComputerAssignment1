@@ -34,7 +34,7 @@ V̂, k̂ = DynamicProgramming.solveVFI(U, β, V₀; maxiter=100)
 
 # Plot value function
 k₀ = k̲:0.1:k̄
-T  = 50
+T  = 15
 plot(1:T, DynamicProgramming.policyTrace(T, k̂, k₀))
 
 
