@@ -14,14 +14,15 @@ function solveVFI(
     # Initialize
     i    = 1
     Θᵢ   = keys(V₀)
-    Vᵢ   = V₀
+    Vᵢ   = V₀ 
     Vᵢ₋₁ = Dict([(θ, -Inf) for θ ∈ Θᵢ])
 
     # Iterate
     while (maximum(abs.(get.(Ref(Vᵢ), Θᵢ, missing) - get.(Ref(Vᵢ₋₁), Θᵢ, missing))) >= tolerance && i <= maxiter)
         # Save the state
         Vᵢ₋₁ = Vᵢ
-
+        
+        #Hallo
         # Do the grid search
         for θ ∈ Θᵢ
             # Initialize search value
